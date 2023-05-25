@@ -10,9 +10,9 @@ namespace WebApi.Models
     public class Fight
     {
         [DataMember]
-        public int Id { get; set; }
+        public int Id { get; set; } = 99;
         [DataMember]
-        public string FirstFigher { get; set; }
+        public string FirstFigher { get; set; } = "test";
         [DataMember]
         public string SecondFighter { get; set; }
         [DataMember]
