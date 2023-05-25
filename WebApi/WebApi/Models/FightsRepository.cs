@@ -21,5 +21,27 @@ namespace WebApi.Models
         {
             return fights.Find(fight=>fight.Id==id);
         }
+        public static void AddFight(Fight fight)
+        {
+            fights.Add(fight);
+        }
+        public static bool UpdateFight(Fight fight)
+        {
+          
+            int fightUpdateIndex = fights.FindIndex(f => f.Id == fight.Id);
+            if (fightUpdateIndex != -1)
+            {
+                fights[fightUpdateIndex].FirstFigher = fight.FirstFigher;
+                fights[fightUpdateIndex].SecondFighter = fight.SecondFighter;
+                fights[fightUpdateIndex].Winner = fight.Winner;
+                fights[fightUpdateIndex].Viewers = fight.Viewers;
+                return true;
+            }return false;
+
+        }
+        public static void DeleteFight(int id)
+        {
+            fights.Remove(GetFight(id));
+        }
     }
 }
