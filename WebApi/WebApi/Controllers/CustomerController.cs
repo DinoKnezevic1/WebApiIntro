@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Web;
 using System.Web.Http;
 using System.Web.Mvc;
@@ -35,7 +37,7 @@ namespace WebApi.Controllers
                 NpgsqlDataReader reader = command.ExecuteReader();
                 if (!reader.HasRows)
                 {
-                    return Request.CreateResponse(System.Net.HttpStatusCode.BadRequest, "No elements exist"); 
+                    return Request.CreateResponse(HttpStatusCode.NotFound, "No elements exist");
                 }
                 while (reader.Read())
                 {
@@ -47,25 +49,26 @@ namespace WebApi.Controllers
 
                     customers.Add(customer);
                 }
-                return Request.CreateResponse(System.Net.HttpStatusCode.OK,customers);
+                return Request.CreateResponse(HttpStatusCode.OK,customers);
             }
         }
 
         [HttpGet]
         public HttpResponseMessage Get(Guid id)
         {
-            Customer customer = GetCustomerById(id);
-
-            if(customer == null)
-            {
-                return Request.CreateResponse(System.Net.HttpStatusCode.NotFound, "Customer does not exist!");
-            }
+            
             try
             {
-                return Request.CreateResponse(System.Net.HttpStatusCode.OK, customer);
+                Customer customer = GetCustomerById(id);
+
+                if (customer == null)
+                {
+                    return Request.CreateResponse(HttpStatusCode.NotFound, "Customer does not exist!");
+                }
+                return Request.CreateResponse(HttpStatusCode.OK, customer);
             }catch (Exception ex)
             {
-                return Request.CreateResponse(System.Net.HttpStatusCode.BadRequest, ex.Message);
+                return Request.CreateResponse(HttpStatusCode.BadRequest, ex.Message);
             }
         }
 
@@ -75,7 +78,7 @@ namespace WebApi.Controllers
             string connectionString = "Host=localhost;Username=postgres;Password=mojabaza123;Database=rent-a-car";
             NpgsqlConnection connection = new NpgsqlConnection(connectionString);
 
-            Customer _customer = null;
+            
             using (connection)
             {
                 NpgsqlCommand command = new NpgsqlCommand();
@@ -93,7 +96,7 @@ namespace WebApi.Controllers
             }
 
 
-            return Request.CreateResponse(System.Net.HttpStatusCode.OK);
+            return Request.CreateResponse(HttpStatusCode.OK);
         }
 
         [HttpPut]
@@ -106,36 +109,50 @@ namespace WebApi.Controllers
 
             if (_customer == null)
             {
-                return Request.CreateErrorResponse(System.Net.HttpStatusCode.BadRequest, "This user does not exist");
+                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "This user does not exist");
             }
             try
             {
                 using (connection)
                 {
+                    var queryBuilder = new StringBuilder("");
                     NpgsqlCommand command = new NpgsqlCommand();
-                    command.CommandText = "UPDATE customer SET \"firstname\" = @firstName, \"lastname\" = @lastName WHERE \"id\" = @id";
+                    queryBuilder.Append("UPDATE customer SET ");
+                    //command.CommandText = "UPDATE customer SET \"firstname\" = @firstName, \"lastname\" = @lastName WHERE \"id\" = @id";
                     command.Connection = connection;
                     connection.Open();
 
-                    command.Parameters.AddWithValue("@id", id);
-                    if (customer.FirstName == null || customer.FirstName.Length == 0)
-                    {
-                        command.Parameters.AddWithValue("@firstname", customer.FirstName = _customer.FirstName);
+                    if (customer.FirstName == null || customer.FirstName == "")
+                    {   
+                        command.Parameters.AddWithValue("@firstName", customer.FirstName = _customer.FirstName);
                     }
+                    queryBuilder.Append(" \"firstname\" = @firstName,");
                     command.Parameters.AddWithValue("@firstName", customer.FirstName);
-                    if (customer.LastName == null || customer.LastName.Length == 0)
+                    if (customer.LastName == null || customer.LastName == "")
                     {
                         command.Parameters.AddWithValue("@lastName", customer.LastName = _customer.LastName);
                     }
+                    queryBuilder.Append(" \"lastname\" = @lastName,");
                     command.Parameters.AddWithValue("@lastName", customer.LastName);
 
+                    if (queryBuilder.ToString().EndsWith(","))
+                    {
+                        if(queryBuilder.Length > 0)
+                        {
+                            queryBuilder.Remove(queryBuilder.Length-1,1);
+                        }
+                    }
+
+                    queryBuilder.Append(" WHERE \"id\" = @id");
+                    command.Parameters.AddWithValue("@id", id);
+                    command.CommandText = queryBuilder.ToString();
                     command.ExecuteNonQuery();
-                    return Request.CreateResponse(System.Net.HttpStatusCode.OK, "User updated successfuly!");
+                    return Request.CreateResponse(HttpStatusCode.OK, "User updated successfuly!");
                 }
             }
             catch (Exception ex)
             {
-                return Request.CreateErrorResponse(System.Net.HttpStatusCode.BadRequest,ex.Message);
+                return Request.CreateErrorResponse(HttpStatusCode.BadRequest,ex.Message);
             }
 
         }
@@ -146,14 +163,14 @@ namespace WebApi.Controllers
             string connectionString = "Host=localhost;Username=postgres;Password=mojabaza123;Database=rent-a-car";
             NpgsqlConnection connection = new NpgsqlConnection(connectionString);
 
-            Customer customer = GetCustomerById(id);
-
-            if (customer == null)
-            {
-                return Request.CreateErrorResponse(System.Net.HttpStatusCode.BadRequest, "This user does not exist");
-            }
             try
             {
+                Customer customer = GetCustomerById(id);
+
+                if (customer == null)
+                {
+                    return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "This user does not exist");
+                }
                 using (connection)
                 {
                     NpgsqlCommand command = new NpgsqlCommand();
@@ -163,11 +180,11 @@ namespace WebApi.Controllers
 
                     command.Parameters.AddWithValue("@id",id);
                     command.ExecuteNonQuery();
-                    return Request.CreateResponse(System.Net.HttpStatusCode.OK, "User deleted successfuly!");
+                    return Request.CreateResponse(HttpStatusCode.OK, "User deleted successfuly!");
                 }
             }catch (Exception ex)
             {
-                return Request.CreateErrorResponse(System.Net.HttpStatusCode.BadRequest, "Couldn't delete!"+ex.Message);
+                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "Couldn't delete!"+ex.Message);
             }
         }
 
