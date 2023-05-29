@@ -46,7 +46,17 @@ namespace WebApi.Controllers
             FightsRepository.AddFight(fight);
             return Request.CreateResponse(System.Net.HttpStatusCode.OK, "Successfully posted a new fight.");
         }
+
         //I used postman to get a fight with id 1 and then copied that response and edited it in body for post request and then tried get for that new fight
+        //public HttpResponseMessage PostNewFight([FromBody] Fight fight)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return Request.CreateResponse(System.Net.HttpStatusCode.BadRequest, "Invalid data");
+        //    }
+        //    FightsRepository.AddFight(fight);
+        //    return Request.CreateResponse(System.Net.HttpStatusCode.OK, "Successfully posted a new fight.");
+        //}
 
         public HttpResponseMessage PutFight(int id, Fight fight)
         {
