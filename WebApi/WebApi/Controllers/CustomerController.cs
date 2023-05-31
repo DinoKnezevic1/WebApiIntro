@@ -30,7 +30,7 @@ namespace WebApi.Controllers
             using (connection)
             {
                 NpgsqlCommand command = new NpgsqlCommand();
-                command.CommandText = "select * from \"customer\"";
+                command.CommandText = "select * from \"Customer\"";
                 command.Connection = connection;
                 connection.Open();
 
@@ -43,9 +43,9 @@ namespace WebApi.Controllers
                 {
                     Customer customer = new Customer();
 
-                    customer.Id=(Guid)reader["id"];
-                    customer.FirstName = (string)reader["firstName"];
-                    customer.LastName = (string)reader["lastName"];
+                    customer.Id=(Guid)reader["Id"];
+                    customer.FirstName = (string)reader["FirstName"];
+                    customer.LastName = (string)reader["LastName"];
 
                     customers.Add(customer);
                 }
@@ -82,15 +82,15 @@ namespace WebApi.Controllers
             using (connection)
             {
                 NpgsqlCommand command = new NpgsqlCommand();
-                command.CommandText = "INSERT INTO customer values(@id,@firstName,@lastName)";
+                command.CommandText = "INSERT INTO customer values(@Id,@FirstName,@LastName)";
                 connection.CreateCommand();
                 connection.Open();
 
                 Guid id = Guid.NewGuid();
                 customer.Id = id;
-                command.Parameters.AddWithValue("@id", customer.Id);
-                command.Parameters.AddWithValue("@firstName", customer.FirstName);
-                command.Parameters.AddWithValue("@lastName", customer.LastName);
+                command.Parameters.AddWithValue("@Id", customer.Id);
+                command.Parameters.AddWithValue("@FirstName", customer.FirstName);
+                command.Parameters.AddWithValue("@LastName", customer.LastName);
 
                 command.ExecuteNonQuery();
             }
@@ -117,23 +117,23 @@ namespace WebApi.Controllers
                 {
                     var queryBuilder = new StringBuilder("");
                     NpgsqlCommand command = new NpgsqlCommand();
-                    queryBuilder.Append("UPDATE customer SET ");
+                    queryBuilder.Append("UPDATE Customer SET ");
                     //command.CommandText = "UPDATE customer SET \"firstname\" = @firstName, \"lastname\" = @lastName WHERE \"id\" = @id";
                     command.Connection = connection;
                     connection.Open();
 
                     if (customer.FirstName == null || customer.FirstName == "")
                     {   
-                        command.Parameters.AddWithValue("@firstName", customer.FirstName = _customer.FirstName);
+                        command.Parameters.AddWithValue("@FirstName", customer.FirstName = _customer.FirstName);
                     }
-                    queryBuilder.Append(" \"firstname\" = @firstName,");
-                    command.Parameters.AddWithValue("@firstName", customer.FirstName);
+                    queryBuilder.Append(" \"Firstname\" = @FirstName,");
+                    command.Parameters.AddWithValue("@FirstName", customer.FirstName);
                     if (customer.LastName == null || customer.LastName == "")
                     {
-                        command.Parameters.AddWithValue("@lastName", customer.LastName = _customer.LastName);
+                        command.Parameters.AddWithValue("@LastName", customer.LastName = _customer.LastName);
                     }
-                    queryBuilder.Append(" \"lastname\" = @lastName,");
-                    command.Parameters.AddWithValue("@lastName", customer.LastName);
+                    queryBuilder.Append(" \"Lastname\" = @LastName,");
+                    command.Parameters.AddWithValue("@LastName", customer.LastName);
 
                     if (queryBuilder.ToString().EndsWith(","))
                     {
@@ -143,8 +143,8 @@ namespace WebApi.Controllers
                         }
                     }
 
-                    queryBuilder.Append(" WHERE \"id\" = @id");
-                    command.Parameters.AddWithValue("@id", id);
+                    queryBuilder.Append(" WHERE \"Id\" = @Id");
+                    command.Parameters.AddWithValue("@Id", id);
                     command.CommandText = queryBuilder.ToString();
                     command.ExecuteNonQuery();
                     return Request.CreateResponse(HttpStatusCode.OK, "User updated successfuly!");
@@ -174,11 +174,11 @@ namespace WebApi.Controllers
                 using (connection)
                 {
                     NpgsqlCommand command = new NpgsqlCommand();
-                    command.CommandText = "DELETE FROM customer WHERE \"id\"=@id";
+                    command.CommandText = "DELETE FROM customer WHERE \"Id\"=@Id";
                     command.Connection = connection;
                     connection.Open();
 
-                    command.Parameters.AddWithValue("@id",id);
+                    command.Parameters.AddWithValue("@Id",id);
                     command.ExecuteNonQuery();
                     return Request.CreateResponse(HttpStatusCode.OK, "User deleted successfuly!");
                 }
@@ -196,9 +196,9 @@ namespace WebApi.Controllers
             using (connection)
             {
                 NpgsqlCommand command = new NpgsqlCommand();
-                command.CommandText = "select * from \"customer\" where \"id\"=@id";
+                command.CommandText = "select * from \"Customer\" where \"Id\"=@Id";
                 command.Connection = connection;
-                command.Parameters.AddWithValue("@id",id);
+                command.Parameters.AddWithValue("@Id",id);
                 connection.Open();
 
                 NpgsqlDataReader reader = command.ExecuteReader();
@@ -207,8 +207,8 @@ namespace WebApi.Controllers
                     reader.Read();
                     Customer customer = new Customer();
                     customer.Id = id;
-                    customer.FirstName = (string)reader["firstName"];
-                    customer.LastName = (string)reader["lastName"];
+                    customer.FirstName = (string)reader["FirstName"];
+                    customer.LastName = (string)reader["LastName"];
                     return customer;
                 }
                 return null;
