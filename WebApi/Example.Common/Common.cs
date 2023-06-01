@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Example.Repository
+namespace Example.Common
 {
-    public class Class1
+    public class Common
     {
     }
 }

@@ -6,7 +6,12 @@ using System.Threading.Tasks;
 
 namespace Example.Model.Common
 {
-    public class Class1
+
+    public interface ICustomer
     {
+        Guid? Id { get; set; }
+        string FirstName { get; set; }
+        string LastName { get; set; }
     }
+
 }

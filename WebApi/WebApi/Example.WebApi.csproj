@@ -211,6 +211,8 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\Customer.cs" />
+    <Compile Include="Models\CustomerRest.cs" />
+    <Compile Include="Models\CustomerUpdateRest.cs" />
     <Compile Include="Models\Fight.cs" />
     <Compile Include="Models\FightsRepository.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -301,6 +303,20 @@
     <None Include="packages.config" />
     <Content Include="Scripts\jquery-3.4.1.slim.min.map" />
     <Content Include="Scripts\jquery-3.4.1.min.map" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Example.Model\Example.Model.csproj">
+      <Project>{182BE1D4-7E83-4A1F-8D90-EA64A1B09727}</Project>
+      <Name>Example.Model</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Example.Repository\Example.Repository.csproj">
+      <Project>{544ECC20-CFEE-4A2C-A556-B958DE651729}</Project>
+      <Name>Example.Repository</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Example.Service\Example.Service.csproj">
+      <Project>{A923CCDF-7B0A-4090-8BC1-D35B9CABEA8E}</Project>
+      <Name>Example.Service</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
