@@ -1,4 +1,7 @@
-﻿using Npgsql;
+﻿using Example.Model;
+using Example.Repository;
+using Example.Service;
+using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,50 +25,37 @@ namespace WebApi.Controllers
         [HttpGet]
         public HttpResponseMessage Get()
         {
-            List<Customer> customers = new List<Customer>();
-
-            string connectionString = "Host=localhost;Username=postgres;Password=mojabaza123;Database=rent-a-car";
-            NpgsqlConnection connection = new NpgsqlConnection(connectionString);
-
-            using (connection)
+            CustomerService customerService = new CustomerService();
+            try
             {
-                NpgsqlCommand command = new NpgsqlCommand();
-                command.CommandText = "select * from \"Customer\"";
-                command.Connection = connection;
-                connection.Open();
-
-                NpgsqlDataReader reader = command.ExecuteReader();
-                if (!reader.HasRows)
+                List<Customer> customers = customerService.GetCustomers();
+                if (customers.Any())
                 {
-                    return Request.CreateResponse(HttpStatusCode.NotFound, "No elements exist");
+                    List<CustomerRest> customersRest = MapCustomersToRest(customers);
+                    return Request.CreateResponse(HttpStatusCode.OK, customers);
                 }
-                while (reader.Read())
-                {
-                    Customer customer = new Customer();
-
-                    customer.Id=(Guid)reader["Id"];
-                    customer.FirstName = (string)reader["FirstName"];
-                    customer.LastName = (string)reader["LastName"];
-
-                    customers.Add(customer);
-                }
-                return Request.CreateResponse(HttpStatusCode.OK,customers);
+                return Request.CreateResponse(HttpStatusCode.NotFound);
             }
+            catch (Exception ex)
+            {
+                return Request.CreateResponse(HttpStatusCode.NotFound, ex);
+            }
+            
         }
 
         [HttpGet]
         public HttpResponseMessage Get(Guid id)
         {
-            
+            CustomerService customerService = new CustomerService();
             try
             {
-                Customer customer = GetCustomerById(id);
+                Customer customer = customerService.GetCustomer(id);
 
                 if (customer == null)
                 {
                     return Request.CreateResponse(HttpStatusCode.NotFound, "Customer does not exist!");
                 }
-                return Request.CreateResponse(HttpStatusCode.OK, customer);
+                return Request.CreateResponse(HttpStatusCode.OK, MapToRest(customer));
             }catch (Exception ex)
             {
                 return Request.CreateResponse(HttpStatusCode.BadRequest, ex.Message);
@@ -73,86 +63,41 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        public HttpResponseMessage Post([FromBody] Customer customer)
+        public HttpResponseMessage Post([FromBody] CustomerRest customer)
         {
-            string connectionString = "Host=localhost;Username=postgres;Password=mojabaza123;Database=rent-a-car";
-            NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            CustomerService customerService = new CustomerService();
 
-            
-            using (connection)
+            try
             {
-                NpgsqlCommand command = new NpgsqlCommand();
-                command.CommandText = "INSERT INTO customer values(@Id,@FirstName,@LastName)";
-                connection.CreateCommand();
-                connection.Open();
+                bool postStatus = customerService.SaveCustomer(MapToCustomer(customer));
+                if (postStatus)
+                {
+                    return Request.CreateResponse(HttpStatusCode.Created, postStatus);
+                }
+                return Request.CreateResponse(HttpStatusCode.BadRequest, "User creation failed!");
 
-                Guid id = Guid.NewGuid();
-                customer.Id = id;
-                command.Parameters.AddWithValue("@Id", customer.Id);
-                command.Parameters.AddWithValue("@FirstName", customer.FirstName);
-                command.Parameters.AddWithValue("@LastName", customer.LastName);
-
-                command.ExecuteNonQuery();
+            }catch (Exception ex)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ex.Message);
             }
-
-
-            return Request.CreateResponse(HttpStatusCode.OK);
         }
 
         [HttpPut]
-        public HttpResponseMessage Put(Guid id, [FromBody]Customer customer)
+        public HttpResponseMessage Put(Guid id, [FromBody]CustomerUpdateRest customer)
         {
-            string connectionString = "Host=localhost;Username=postgres;Password=mojabaza123;Database=rent-a-car";
-            NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            CustomerService customerService = new CustomerService();
 
-            Customer _customer = GetCustomerById(id);
-
-            if (_customer == null)
-            {
-                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "This user does not exist");
-            }
             try
             {
-                using (connection)
+                bool putStatus = customerService.UpdateCustomer(id, MapToCustomerUpdate(customer));
+                if (putStatus)
                 {
-                    var queryBuilder = new StringBuilder("");
-                    NpgsqlCommand command = new NpgsqlCommand();
-                    queryBuilder.Append("UPDATE Customer SET ");
-                    //command.CommandText = "UPDATE customer SET \"firstname\" = @firstName, \"lastname\" = @lastName WHERE \"id\" = @id";
-                    command.Connection = connection;
-                    connection.Open();
-
-                    if (customer.FirstName == null || customer.FirstName == "")
-                    {   
-                        command.Parameters.AddWithValue("@FirstName", customer.FirstName = _customer.FirstName);
-                    }
-                    queryBuilder.Append(" \"Firstname\" = @FirstName,");
-                    command.Parameters.AddWithValue("@FirstName", customer.FirstName);
-                    if (customer.LastName == null || customer.LastName == "")
-                    {
-                        command.Parameters.AddWithValue("@LastName", customer.LastName = _customer.LastName);
-                    }
-                    queryBuilder.Append(" \"Lastname\" = @LastName,");
-                    command.Parameters.AddWithValue("@LastName", customer.LastName);
-
-                    if (queryBuilder.ToString().EndsWith(","))
-                    {
-                        if(queryBuilder.Length > 0)
-                        {
-                            queryBuilder.Remove(queryBuilder.Length-1,1);
-                        }
-                    }
-
-                    queryBuilder.Append(" WHERE \"Id\" = @Id");
-                    command.Parameters.AddWithValue("@Id", id);
-                    command.CommandText = queryBuilder.ToString();
-                    command.ExecuteNonQuery();
-                    return Request.CreateResponse(HttpStatusCode.OK, "User updated successfuly!");
+                    return Request.CreateResponse(HttpStatusCode.OK, putStatus);
                 }
-            }
-            catch (Exception ex)
+                return Request.CreateErrorResponse(HttpStatusCode.BadRequest,"Customer update failed");
+            }catch(Exception ex)
             {
-                return Request.CreateErrorResponse(HttpStatusCode.BadRequest,ex.Message);
+                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ex.Message);
             }
 
         }
@@ -160,59 +105,53 @@ namespace WebApi.Controllers
         [HttpDelete]
         public HttpResponseMessage Delete(Guid id)
         {
-            string connectionString = "Host=localhost;Username=postgres;Password=mojabaza123;Database=rent-a-car";
-            NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            CustomerService customerService = new CustomerService();
 
             try
             {
-                Customer customer = GetCustomerById(id);
-
-                if (customer == null)
+                bool deleteStatus = customerService.DeleteCustomer(id);
+                if (deleteStatus)
                 {
-                    return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "This user does not exist");
+                    return Request.CreateResponse(HttpStatusCode.OK, deleteStatus);
                 }
-                using (connection)
-                {
-                    NpgsqlCommand command = new NpgsqlCommand();
-                    command.CommandText = "DELETE FROM customer WHERE \"Id\"=@Id";
-                    command.Connection = connection;
-                    connection.Open();
-
-                    command.Parameters.AddWithValue("@Id",id);
-                    command.ExecuteNonQuery();
-                    return Request.CreateResponse(HttpStatusCode.OK, "User deleted successfuly!");
-                }
-            }catch (Exception ex)
-            {
-                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "Couldn't delete!"+ex.Message);
+                return Request.CreateResponse(HttpStatusCode.BadRequest);
+            }catch(Exception ex){
+                return Request.CreateErrorResponse(HttpStatusCode.BadRequest,ex.Message);
             }
         }
 
-        private Customer GetCustomerById(Guid id)
+        private CustomerRest MapToRest(Customer customer)
         {
-            string connectionString = "Host=localhost;Username=postgres;Password=mojabaza123;Database=rent-a-car";
-            NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            CustomerRest customerRest = new CustomerRest();
+            customerRest.Id = customer.Id;
+            customerRest.FirstName = customer.FirstName;
+            customerRest.LastName = customer.LastName;
+            return customerRest;
+        }
+        private List<CustomerRest> MapCustomersToRest(List<Customer> customers)
+        {
+            List<CustomerRest> customerRests = new List<CustomerRest>();
 
-            using (connection)
+            foreach (Customer customer in customers)
             {
-                NpgsqlCommand command = new NpgsqlCommand();
-                command.CommandText = "select * from \"Customer\" where \"Id\"=@Id";
-                command.Connection = connection;
-                command.Parameters.AddWithValue("@Id",id);
-                connection.Open();
-
-                NpgsqlDataReader reader = command.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    reader.Read();
-                    Customer customer = new Customer();
-                    customer.Id = id;
-                    customer.FirstName = (string)reader["FirstName"];
-                    customer.LastName = (string)reader["LastName"];
-                    return customer;
-                }
-                return null;
+                customerRests.Add(MapToRest(customer));
             }
+            return customerRests;
+        }
+        private Customer MapToCustomer(CustomerRest customerRest)
+        {
+            Customer customer = new Customer();
+            customer.Id = customerRest.Id;
+            customer.FirstName = customerRest.FirstName;
+            customer.LastName = customerRest.LastName;
+            return customer;
+        }
+        private Customer MapToCustomerUpdate(CustomerUpdateRest customerUpdate)
+        {
+            Customer customer = new Customer();
+            customer.FirstName = customerUpdate.FirstName;
+            customer.LastName = customerUpdate.LastName;
+            return customer;
         }
     }
 }

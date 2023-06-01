@@ -5,11 +5,10 @@ using System.Web;
 
 namespace WebApi.Models
 {
-    public class CustomerOLD
+    public class CustomerRest
     {
         public Guid? Id { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
-
     }
 }
