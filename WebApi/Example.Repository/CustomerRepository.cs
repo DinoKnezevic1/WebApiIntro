@@ -84,7 +84,7 @@ namespace Example.Repository
                 using (connection)
                 {
                     NpgsqlCommand command = new NpgsqlCommand();
-                    command.CommandText = "INSERT INTO customer values(@Id,@FirstName,@LastName)";
+                    command.CommandText = "INSERT INTO \"Customer\" values(@Id,@FirstName,@LastName)";
                     command.Connection = connection;
                     connection.CreateCommand();
                     connection.Open();
@@ -121,19 +121,18 @@ namespace Example.Repository
                 {
                     var queryBuilder = new StringBuilder();
                     NpgsqlCommand command = new NpgsqlCommand();
-                    queryBuilder.Append("UPDATE Customer SET ");
+                    queryBuilder.Append("UPDATE \"Customer\" SET ");
                     command.Connection = connection;
                     connection.Open();
 
                     if (customer.FirstName!=null || customer.FirstName.Length!=0)
                     {
-                        queryBuilder.Append(" \"Firstname\" = @FirstName,");
+                        queryBuilder.Append(" \"FirstName\" = @FirstName,");
                         command.Parameters.AddWithValue("@FirstName", customer.FirstName);
                     }
-
                     if (customer.LastName != null || customer.LastName.Length!=0)
                     {
-                        queryBuilder.Append(" \"Lastname\" = @LastName,");
+                        queryBuilder.Append(" \"LastName\" = @LastName,");
                         command.Parameters.AddWithValue("@LastName", customer.LastName);
                     }
                     if (queryBuilder.ToString().EndsWith(","))
@@ -172,7 +171,7 @@ namespace Example.Repository
                 using (connection)
                 {
                     NpgsqlCommand command = new NpgsqlCommand();
-                    command.CommandText = "DELETE FROM customer WHERE \"Id\"=@Id";
+                    command.CommandText = "DELETE FROM \"Customer\" WHERE \"Id\"=@Id";
                     command.Connection = connection;
                     connection.Open();
 
