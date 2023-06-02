@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
 using System.Web.Mvc;
@@ -23,12 +24,12 @@ namespace WebApi.Controllers
     {
 
         [HttpGet]
-        public HttpResponseMessage Get()
+        public async Task<HttpResponseMessage> GetAsync()
         {
             CustomerService customerService = new CustomerService();
             try
             {
-                List<Customer> customers = customerService.GetCustomers();
+                List<Customer> customers = await customerService.GetCustomersAsync();
                 if (customers.Any())
                 {
                     List<CustomerRest> customersRest = MapCustomersToRest(customers);
@@ -44,12 +45,12 @@ namespace WebApi.Controllers
         }
 
         [HttpGet]
-        public HttpResponseMessage Get(Guid id)
+        public async Task<HttpResponseMessage> GetAsync(Guid id)
         {
             CustomerService customerService = new CustomerService();
             try
             {
-                Customer customer = customerService.GetCustomer(id);
+                Customer customer = await customerService.GetCustomerAsync(id);
 
                 if (customer == null)
                 {
@@ -63,13 +64,13 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        public HttpResponseMessage Post([FromBody] CustomerRest customer)
+        public async Task<HttpResponseMessage> Post([FromBody] CustomerRest customer)
         {
             CustomerService customerService = new CustomerService();
 
             try
             {
-                bool postStatus = customerService.SaveCustomer(MapToCustomer(customer));
+                bool postStatus = await customerService.SaveCustomerAsync(MapToCustomer(customer));
                 if (postStatus)
                 {
                     return Request.CreateResponse(HttpStatusCode.Created, postStatus);
@@ -83,13 +84,13 @@ namespace WebApi.Controllers
         }
 
         [HttpPut]
-        public HttpResponseMessage Put(Guid id, [FromBody]CustomerUpdateRest customer)
+        public async Task<HttpResponseMessage> Put(Guid id, [FromBody]CustomerUpdateRest customer)
         {
             CustomerService customerService = new CustomerService();
 
             try
             {
-                bool putStatus = customerService.UpdateCustomer(id, MapToCustomerUpdate(customer));
+                bool putStatus = await customerService.UpdateCustomerAsync(id, MapToCustomerUpdate(customer));
                 if (putStatus)
                 {
                     return Request.CreateResponse(HttpStatusCode.OK, putStatus);
@@ -103,13 +104,13 @@ namespace WebApi.Controllers
         }
 
         [HttpDelete]
-        public HttpResponseMessage Delete(Guid id)
+        public async Task<HttpResponseMessage> Delete(Guid id)
         {
             CustomerService customerService = new CustomerService();
 
             try
             {
-                bool deleteStatus = customerService.DeleteCustomer(id);
+                bool deleteStatus = await customerService.DeleteCustomerAsync(id);
                 if (deleteStatus)
                 {
                     return Request.CreateResponse(HttpStatusCode.OK, deleteStatus);

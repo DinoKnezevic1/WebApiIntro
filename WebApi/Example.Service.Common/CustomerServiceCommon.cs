@@ -9,13 +9,13 @@ namespace Example.Service.Common
 {
     public interface ICustomerService
     {
-        Customer GetCustomer(Guid id);
+        Task<Customer> GetCustomerAsync(Guid id);
 
-        List<Customer> GetCustomers();
+        Task<List<Customer>> GetCustomersAsync();
 
-        bool SaveCustomer(Customer customer);
+        Task<bool> SaveCustomerAsync(Customer customer);
 
-        bool DeleteCustomer(Guid id);
-        bool UpdateCustomer(Guid id, Customer customer);
+        Task<bool> DeleteCustomerAsync(Guid id);
+        Task<bool> UpdateCustomerAsync(Guid id, Customer customer);
     }
 }
