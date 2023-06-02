@@ -17,7 +17,7 @@ namespace Example.Repository
         
         
         [HttpGet]
-        public List<Customer> GetCustomers()
+        public async Task<List<Customer>> GetCustomersAsync()
         {
             List<Customer> customers = new List<Customer>();
 
@@ -29,9 +29,9 @@ namespace Example.Repository
                     NpgsqlCommand command = new NpgsqlCommand();
                     command.CommandText = "select * from \"Customer\"";
                     command.Connection = connection;
-                    connection.Open();
+                    await connection.OpenAsync();
 
-                    NpgsqlDataReader reader = command.ExecuteReader();
+                    NpgsqlDataReader reader = await command.ExecuteReaderAsync();
                     if (!reader.HasRows)
                     {
                         return null;
@@ -56,11 +56,11 @@ namespace Example.Repository
             }
         }
         [HttpGet]
-        public Customer GetCustomer(Guid id)
+        public async Task<Customer> GetCustomerAsync(Guid id)
         {
             try
             {
-                Customer customer = GetCustomerById(id);
+                Customer customer = await GetCustomerByIdAsync(id);
 
                 if (customer == null)
                 {
@@ -76,7 +76,7 @@ namespace Example.Repository
         }
 
         [HttpPost]
-        public bool SaveCustomer([FromBody]Customer customer)
+        public async Task<bool> SaveCustomerAsync([FromBody]Customer customer)
         {
             try
             {
@@ -87,7 +87,7 @@ namespace Example.Repository
                     command.CommandText = "INSERT INTO \"Customer\" values(@Id,@FirstName,@LastName)";
                     command.Connection = connection;
                     connection.CreateCommand();
-                    connection.Open();
+                    await connection.OpenAsync();
 
                     Guid id = Guid.NewGuid();
                     customer.Id = id;
@@ -95,7 +95,7 @@ namespace Example.Repository
                     command.Parameters.AddWithValue("@FirstName", customer.FirstName);
                     command.Parameters.AddWithValue("@LastName", customer.LastName);
 
-                    command.ExecuteNonQuery();
+                    await command.ExecuteNonQueryAsync();
                     return true;
                 }
             }
@@ -106,9 +106,9 @@ namespace Example.Repository
             }
         }
         [HttpPut]
-        public bool UpdateCustomer(Guid id, [FromBody]Customer customer)
+        public async Task<bool> UpdateCustomerAsync(Guid id, [FromBody]Customer customer)
         {
-            Customer currentCustomer = GetCustomerById(id);
+            Customer currentCustomer = await GetCustomerByIdAsync(id);
 
             if (currentCustomer == null)
             {
@@ -123,7 +123,7 @@ namespace Example.Repository
                     NpgsqlCommand command = new NpgsqlCommand();
                     queryBuilder.Append("UPDATE \"Customer\" SET ");
                     command.Connection = connection;
-                    connection.Open();
+                    await connection.OpenAsync();
 
                     if (customer.FirstName!=null || customer.FirstName.Length!=0)
                     {
@@ -146,7 +146,7 @@ namespace Example.Repository
                     command.Parameters.AddWithValue("@Id", id);
                     command.CommandText = queryBuilder.ToString();
                     connection.CreateCommand();
-                    command.ExecuteNonQuery();
+                    await command.ExecuteNonQueryAsync();
                     return true;
                 }
             }
@@ -157,12 +157,12 @@ namespace Example.Repository
             }
         }
         [HttpDelete]
-        public bool DeleteCustomer(Guid id)
+        public async Task<bool> DeleteCustomerAsync(Guid id)
         {
             try
             {
                 NpgsqlConnection connection = new NpgsqlConnection(connectionString);
-                Customer customer = GetCustomerById(id);
+                Customer customer = await GetCustomerByIdAsync(id);
 
                 if (customer == null)
                 {
@@ -173,10 +173,10 @@ namespace Example.Repository
                     NpgsqlCommand command = new NpgsqlCommand();
                     command.CommandText = "DELETE FROM \"Customer\" WHERE \"Id\"=@Id";
                     command.Connection = connection;
-                    connection.Open();
+                    await connection.OpenAsync();
 
                     command.Parameters.AddWithValue("@Id", id);
-                    command.ExecuteNonQuery();
+                    await command.ExecuteNonQueryAsync();
                     return true;
                 }
             }
@@ -187,7 +187,7 @@ namespace Example.Repository
             }
         }
 
-        private Customer GetCustomerById(Guid id)
+        private async Task<Customer> GetCustomerByIdAsync(Guid id)
         {
 
             try
@@ -199,9 +199,9 @@ namespace Example.Repository
                     command.CommandText = "select * from \"Customer\" where \"Id\"=@Id";
                     command.Connection = connection;
                     command.Parameters.AddWithValue("@Id", id);
-                    connection.Open();
+                    await connection.OpenAsync();
 
-                    NpgsqlDataReader reader = command.ExecuteReader();
+                    NpgsqlDataReader reader = await command.ExecuteReaderAsync();
                     if (reader.HasRows)
                     {
                         reader.Read();

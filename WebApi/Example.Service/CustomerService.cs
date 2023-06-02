@@ -12,33 +12,33 @@ namespace Example.Service
 {
     public class CustomerService : ICustomerService
     {
-        public List<Customer> GetCustomers()
+        public async Task<List<Customer>> GetCustomersAsync()
         {
             CustomerRepository customerRepository = new CustomerRepository();
-            return customerRepository.GetCustomers();
+            return await customerRepository.GetCustomersAsync();
         }
 
-        public Customer GetCustomer(Guid id)
+        public async Task<Customer> GetCustomerAsync(Guid id)
         {
             CustomerRepository customersRepository = new CustomerRepository();
-            return customersRepository.GetCustomer(id);
+            return await customersRepository.GetCustomerAsync(id);
         }
 
-        public bool SaveCustomer(Customer customer)
+        public async Task<bool> SaveCustomerAsync(Customer customer)
         {
             CustomerRepository customerRepository = new CustomerRepository();
-            return customerRepository.SaveCustomer(customer);
+            return await customerRepository.SaveCustomerAsync(customer);
         }
 
-        public bool UpdateCustomer(Guid id, Customer customer)
+        public async Task<bool> UpdateCustomerAsync(Guid id, Customer customer)
         {
             CustomerRepository customerRepository=new CustomerRepository();
-            return customerRepository.UpdateCustomer(id, customer);
+            return await customerRepository.UpdateCustomerAsync(id, customer);
         }
-        public bool DeleteCustomer(Guid id)
+        public async Task<bool> DeleteCustomerAsync(Guid id)
         {
             CustomerRepository customerRepository = new CustomerRepository();
-            return customerRepository.DeleteCustomer(id);
+            return await customerRepository.DeleteCustomerAsync(id);
         }
     }
 }
