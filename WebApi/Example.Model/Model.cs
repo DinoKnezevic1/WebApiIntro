@@ -13,4 +13,10 @@ namespace Example.Model
         public string FirstName { get; set; }
         public string LastName { get; set; }
     }
+
+    public class CustomersResponse
+    {
+        public List<Customer> Customers { get; set; }
+        public int TotalCustomers { get; set; }
+    }
 }

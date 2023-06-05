@@ -120,6 +120,14 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Example.Common\Example.Common.csproj">
+      <Project>{EA137148-0EF8-4CE9-9105-C9481E1F278A}</Project>
+      <Name>Example.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Example.Model.Common\Example.Model.Common.csproj">
+      <Project>{1105F3CE-662B-4261-96EE-477A41FE9F5D}</Project>
+      <Name>Example.Model.Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Example.Model\Example.Model.csproj">
       <Project>{182BE1D4-7E83-4A1F-8D90-EA64A1B09727}</Project>
       <Name>Example.Model</Name>

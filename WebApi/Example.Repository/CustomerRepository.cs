@@ -1,4 +1,5 @@
-﻿using Example.Model;
+﻿using Example.Common;
+using Example.Model;
 using Example.Repository.Common;
 using Npgsql;
 using System;
@@ -14,8 +15,8 @@ namespace Example.Repository
     {
 
         private string connectionString = "Host=localhost;Username=postgres;Password=mojabaza123;Database=rent-a-car";
-        
-        
+
+        /*
         [HttpGet]
         public async Task<List<Customer>> GetCustomersAsync()
         {
@@ -55,6 +56,96 @@ namespace Example.Repository
                 return null;
             }
         }
+        */
+
+        [HttpGet]
+        public async Task<List<Customer>> GetCustomersAsync([FromUri] Sorting sorting, [FromUri] Paging paging, [FromUri] Filtering filtering)
+        {
+            List<Customer> customers = new List<Customer>();
+
+            try
+            {
+                NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+                using (connection)
+                {
+                    var queryBuilder = new StringBuilder();
+                    NpgsqlCommand command = new NpgsqlCommand();
+
+                    NpgsqlCommand commandTotal = new NpgsqlCommand();
+                    commandTotal.CommandText = "SELECT COUNT(\"FirstName\") FROM \"Customer\"";
+                    command.Connection = connection;
+                    
+                    queryBuilder.Append("SELECT * FROM \"Customer\" ");
+
+                    queryBuilder.Append("WHERE 1 = 1 ");
+                    queryBuilder.Append(FilterQuery(filtering,command));
+
+                    if (sorting.OrderBy != null || sorting.OrderBy.Length != 0)
+                    {
+                        queryBuilder.Append("ORDER BY \"Customer\".");
+                        queryBuilder.Append("\""+sorting.OrderBy+"\"" + " ");
+                    }
+                    else
+                    {
+                        queryBuilder.Append("ORDER BY \"FirstName\" ");
+                    }
+                    if (sorting.SortOrder != null || sorting.SortOrder.Length != 0)
+                    {
+                        queryBuilder.Append(sorting.SortOrder + " ");
+                    }
+                    else
+                    {
+                        queryBuilder.Append("ASC ");
+                    }
+                    queryBuilder.Append("LIMIT " + paging.ItemsPerPage + " ");
+                    queryBuilder.Append("OFFSET " + paging.PageNumber + " ");
+                    command.CommandText = queryBuilder.ToString();
+                    connection.CreateCommand();
+                    await connection.OpenAsync();
+
+                
+                    NpgsqlDataReader reader = await command.ExecuteReaderAsync();
+                    if (!reader.HasRows)
+                    {
+                        return null;
+                    }
+                    while (reader.Read())
+                    {
+                        Customer customer = new Customer();
+
+                        customer.Id = (Guid)reader["Id"];
+                        customer.FirstName = (string)reader["FirstName"];
+                        customer.LastName = (string)reader["LastName"];
+
+                        customers.Add(customer);
+                    }
+                    return customers;
+
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return null;
+            }
+        }
+            private StringBuilder FilterQuery(Filtering filtering,NpgsqlCommand command)
+            {
+                StringBuilder queryBuilder = new StringBuilder();
+                if (filtering.SearchQuery != null)
+                {
+                    queryBuilder.Append("AND \"FirstName\" = @FirstName ");
+                    command.Parameters.AddWithValue("FirstName", filtering.SearchQuery);
+                }
+                if (filtering.StartingLetter != null)
+                {
+                    queryBuilder.Append("AND \"FirstName\" LIKE ");
+                    queryBuilder.Append("'" + filtering.StartingLetter + "%" + "' ");
+                }
+                return queryBuilder;
+            }
+        
+
         [HttpGet]
         public async Task<Customer> GetCustomerAsync(Guid id)
         {
@@ -221,5 +312,6 @@ namespace Example.Repository
             }
             
         }
+
     }
 }
