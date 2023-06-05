@@ -1,4 +1,5 @@
-﻿using Example.Model;
+﻿using Example.Common;
+using Example.Model;
 using Example.Repository;
 using Example.Service;
 using Npgsql;
@@ -24,12 +25,24 @@ namespace WebApi.Controllers
     {
 
         [HttpGet]
-        public async Task<HttpResponseMessage> GetAsync()
+        public async Task<HttpResponseMessage> GetAsync(string OrderBy,string SortOrder, int ItemsPerPage, int PageNumber, string SearchQuery, string StartingLetter)
         {
             CustomerService customerService = new CustomerService();
             try
             {
-                List<Customer> customers = await customerService.GetCustomersAsync();
+                Sorting sorting = new Sorting();
+                sorting.SortOrder = SortOrder;
+                sorting.OrderBy= OrderBy;
+
+                Paging paging = new Paging();
+                paging.PageNumber = PageNumber;
+                paging.ItemsPerPage = ItemsPerPage;
+
+                Filtering filtering = new Filtering();
+                filtering.StartingLetter = StartingLetter;
+                filtering.SearchQuery = SearchQuery;
+
+                List<Customer> customers = await customerService.GetCustomersAsync(sorting,paging,filtering);
                 if (customers.Any())
                 {
                     List<CustomerRest> customersRest = MapCustomersToRest(customers);

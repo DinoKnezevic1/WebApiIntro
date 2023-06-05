@@ -1,4 +1,5 @@
-﻿using Example.Model;
+﻿using Example.Common;
+using Example.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace Example.Service.Common
     {
         Task<Customer> GetCustomerAsync(Guid id);
 
-        Task<List<Customer>> GetCustomersAsync();
+        Task<List<Customer>> GetCustomersAsync(Sorting sorting, Paging paging, Filtering filtering);
 
         Task<bool> SaveCustomerAsync(Customer customer);
 

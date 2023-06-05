@@ -1,4 +1,5 @@
-﻿using Example.Model;
+﻿using Example.Common;
+using Example.Model;
 using Example.Repository;
 using Example.Service.Common;
 using System;
@@ -12,10 +13,10 @@ namespace Example.Service
 {
     public class CustomerService : ICustomerService
     {
-        public async Task<List<Customer>> GetCustomersAsync()
+        public async Task<List<Customer>> GetCustomersAsync(Sorting sorting, Paging paging, Filtering filtering)
         {
             CustomerRepository customerRepository = new CustomerRepository();
-            return await customerRepository.GetCustomersAsync();
+            return await customerRepository.GetCustomersAsync(sorting, paging,  filtering);
         }
 
         public async Task<Customer> GetCustomerAsync(Guid id)
