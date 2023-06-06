@@ -59,10 +59,10 @@ namespace Example.Repository
         */
 
         [HttpGet]
-        public async Task<List<Customer>> GetCustomersAsync([FromUri] Sorting sorting, [FromUri] Paging paging, [FromUri] Filtering filtering)
+        public async Task<PagedList<Customer>> GetCustomersAsync([FromUri] Sorting sorting, [FromUri] Paging paging, [FromUri] Filtering filtering)
         {
             List<Customer> customers = new List<Customer>();
-
+            int totalCustomers = 0;
             try
             {
                 NpgsqlConnection connection = new NpgsqlConnection(connectionString);
@@ -70,9 +70,6 @@ namespace Example.Repository
                 {
                     var queryBuilder = new StringBuilder();
                     NpgsqlCommand command = new NpgsqlCommand();
-
-                    NpgsqlCommand commandTotal = new NpgsqlCommand();
-                    commandTotal.CommandText = "SELECT COUNT(\"FirstName\") FROM \"Customer\"";
                     command.Connection = connection;
                     
                     queryBuilder.Append("SELECT * FROM \"Customer\" ");
@@ -80,7 +77,7 @@ namespace Example.Repository
                     queryBuilder.Append("WHERE 1 = 1 ");
                     queryBuilder.Append(FilterQuery(filtering,command));
 
-                    if (sorting.OrderBy != null || sorting.OrderBy.Length != 0)
+                    if (sorting.OrderBy != null)
                     {
                         queryBuilder.Append("ORDER BY \"Customer\".");
                         queryBuilder.Append("\""+sorting.OrderBy+"\"" + " ");
@@ -89,7 +86,7 @@ namespace Example.Repository
                     {
                         queryBuilder.Append("ORDER BY \"FirstName\" ");
                     }
-                    if (sorting.SortOrder != null || sorting.SortOrder.Length != 0)
+                    if (sorting.SortOrder != null)
                     {
                         queryBuilder.Append(sorting.SortOrder + " ");
                     }
@@ -97,8 +94,23 @@ namespace Example.Repository
                     {
                         queryBuilder.Append("ASC ");
                     }
-                    queryBuilder.Append("LIMIT " + paging.ItemsPerPage + " ");
-                    queryBuilder.Append("OFFSET " + paging.PageNumber + " ");
+                    //queryBuilder.Append("LIMIT " + paging.ItemsPerPage + " ");
+                    //queryBuilder.Append("OFFSET " + paging.PageNumber + " ");
+
+                    if (paging.ItemsPerPage == 0)
+                    {
+                        paging.ItemsPerPage = 4;
+                    }
+                    if(paging.PageNumber == 0)
+                    {
+                        paging.PageNumber = 1;
+                    }
+
+                    queryBuilder.Append(" OFFSET @Offset LIMIT @Limit");
+
+                    command.Parameters.AddWithValue("@Offset", paging.ItemsPerPage * (paging.PageNumber - 1));
+                    command.Parameters.AddWithValue("@Limit", paging.ItemsPerPage);
+
                     command.CommandText = queryBuilder.ToString();
                     connection.CreateCommand();
                     await connection.OpenAsync();
@@ -119,8 +131,18 @@ namespace Example.Repository
 
                         customers.Add(customer);
                     }
-                    return customers;
+                    reader.Close();
 
+                    NpgsqlCommand commandTotal = new NpgsqlCommand();
+                    StringBuilder queryTotal = new StringBuilder();
+                    queryTotal.Append("SELECT COUNT(\"FirstName\") FROM \"Customer\" WHERE 1 = 1 ");
+                    queryTotal.Append(FilterQuery(filtering, commandTotal));
+                    commandTotal.CommandText = queryTotal.ToString();
+                    commandTotal.Connection = connection;
+                    totalCustomers = Convert.ToInt32(await commandTotal.ExecuteScalarAsync());
+
+                    PagedList<Customer> paginatedList = new PagedList<Customer>(customers, totalCustomers, paging.PageNumber, paging.ItemsPerPage);
+                    return paginatedList;
                 }
             }
             catch (Exception ex)
@@ -129,7 +151,7 @@ namespace Example.Repository
                 return null;
             }
         }
-            private StringBuilder FilterQuery(Filtering filtering,NpgsqlCommand command)
+            private StringBuilder FilterQuery(Filtering filtering, NpgsqlCommand command)
             {
                 StringBuilder queryBuilder = new StringBuilder();
                 if (filtering.SearchQuery != null)

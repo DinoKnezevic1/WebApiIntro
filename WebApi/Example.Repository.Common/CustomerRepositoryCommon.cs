@@ -12,7 +12,7 @@ namespace Example.Repository.Common
     {
         Task<Customer> GetCustomerAsync(Guid id);
 
-        Task<List<Customer>> GetCustomersAsync(Sorting sorting, Paging paging, Filtering filtering);
+        Task<PagedList<Customer>> GetCustomersAsync(Sorting sorting, Paging paging, Filtering filtering);
 
         Task<bool> SaveCustomerAsync(Customer customer);
 

@@ -2,6 +2,7 @@
 using Example.Model;
 using Example.Repository;
 using Example.Service;
+using Example.Service.Common;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -24,29 +25,36 @@ namespace WebApi.Controllers
     public class CustomerController : ApiController
     {
 
-        [HttpGet]
-        public async Task<HttpResponseMessage> GetAsync(string OrderBy,string SortOrder, int ItemsPerPage, int PageNumber, string SearchQuery, string StartingLetter)
+        private ICustomerService _customerService;
+
+        public CustomerController(ICustomerService customerService)
         {
-            CustomerService customerService = new CustomerService();
+            _customerService = customerService;
+        }
+
+        [HttpGet]
+        public async Task<HttpResponseMessage> GetAsync(string orderBy = "LastName", string sortOrder = "ASC", int itemsPerPage = 3, int pageNumber = 1, string searchQuery = "Dino", string startingLetter = "D")
+        {
             try
             {
                 Sorting sorting = new Sorting();
-                sorting.SortOrder = SortOrder;
-                sorting.OrderBy= OrderBy;
+                sorting.SortOrder = sortOrder;
+                sorting.OrderBy= orderBy;
 
                 Paging paging = new Paging();
-                paging.PageNumber = PageNumber;
-                paging.ItemsPerPage = ItemsPerPage;
+                paging.PageNumber = pageNumber;
+                paging.ItemsPerPage = itemsPerPage;
 
                 Filtering filtering = new Filtering();
-                filtering.StartingLetter = StartingLetter;
-                filtering.SearchQuery = SearchQuery;
+                filtering.StartingLetter = startingLetter;
+                filtering.SearchQuery = searchQuery;
 
-                List<Customer> customers = await customerService.GetCustomersAsync(sorting,paging,filtering);
-                if (customers.Any())
+                PagedList<Customer> pagedList = await _customerService.GetCustomersAsync(sorting, paging, filtering);
+                //List<Customer> customers = await _customerService.GetCustomersAsync(sorting,paging,filtering);
+                if (pagedList.Any())
                 {
-                    List<CustomerRest> customersRest = MapCustomersToRest(customers);
-                    return Request.CreateResponse(HttpStatusCode.OK, customers);
+                    List<CustomerRest> customersRest = MapCustomersToRest(pagedList);
+                    return Request.CreateResponse(HttpStatusCode.OK, pagedList);
                 }
                 return Request.CreateResponse(HttpStatusCode.NotFound);
             }
@@ -60,10 +68,9 @@ namespace WebApi.Controllers
         [HttpGet]
         public async Task<HttpResponseMessage> GetAsync(Guid id)
         {
-            CustomerService customerService = new CustomerService();
             try
             {
-                Customer customer = await customerService.GetCustomerAsync(id);
+                Customer customer = await _customerService.GetCustomerAsync(id);
 
                 if (customer == null)
                 {
@@ -79,11 +86,9 @@ namespace WebApi.Controllers
         [HttpPost]
         public async Task<HttpResponseMessage> Post([FromBody] CustomerRest customer)
         {
-            CustomerService customerService = new CustomerService();
-
             try
             {
-                bool postStatus = await customerService.SaveCustomerAsync(MapToCustomer(customer));
+                bool postStatus = await _customerService.SaveCustomerAsync(MapToCustomer(customer));
                 if (postStatus)
                 {
                     return Request.CreateResponse(HttpStatusCode.Created, postStatus);
@@ -99,11 +104,9 @@ namespace WebApi.Controllers
         [HttpPut]
         public async Task<HttpResponseMessage> Put(Guid id, [FromBody]CustomerUpdateRest customer)
         {
-            CustomerService customerService = new CustomerService();
-
             try
             {
-                bool putStatus = await customerService.UpdateCustomerAsync(id, MapToCustomerUpdate(customer));
+                bool putStatus = await _customerService.UpdateCustomerAsync(id, MapToCustomerUpdate(customer));
                 if (putStatus)
                 {
                     return Request.CreateResponse(HttpStatusCode.OK, putStatus);
@@ -119,11 +122,9 @@ namespace WebApi.Controllers
         [HttpDelete]
         public async Task<HttpResponseMessage> Delete(Guid id)
         {
-            CustomerService customerService = new CustomerService();
-
             try
             {
-                bool deleteStatus = await customerService.DeleteCustomerAsync(id);
+                bool deleteStatus = await _customerService.DeleteCustomerAsync(id);
                 if (deleteStatus)
                 {
                     return Request.CreateResponse(HttpStatusCode.OK, deleteStatus);
@@ -142,7 +143,7 @@ namespace WebApi.Controllers
             customerRest.LastName = customer.LastName;
             return customerRest;
         }
-        private List<CustomerRest> MapCustomersToRest(List<Customer> customers)
+        private List<CustomerRest> MapCustomersToRest(PagedList<Customer> customers)
         {
             List<CustomerRest> customerRests = new List<CustomerRest>();
 
