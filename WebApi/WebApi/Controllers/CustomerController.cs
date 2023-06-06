@@ -33,21 +33,21 @@ namespace WebApi.Controllers
         }
 
         [HttpGet]
-        public async Task<HttpResponseMessage> GetAsync(string OrderBy,string SortOrder, int ItemsPerPage, int PageNumber, string SearchQuery, string StartingLetter)
+        public async Task<HttpResponseMessage> GetAsync(string orderBy,string sortOrder, int itemsPerPage, int pageNumber, string searchQuery, string startingLetter)
         {
             try
             {
                 Sorting sorting = new Sorting();
-                sorting.SortOrder = SortOrder;
-                sorting.OrderBy= OrderBy;
+                sorting.SortOrder = sortOrder;
+                sorting.OrderBy= orderBy;
 
                 Paging paging = new Paging();
-                paging.PageNumber = PageNumber;
-                paging.ItemsPerPage = ItemsPerPage;
+                paging.PageNumber = pageNumber;
+                paging.ItemsPerPage = itemsPerPage;
 
                 Filtering filtering = new Filtering();
-                filtering.StartingLetter = StartingLetter;
-                filtering.SearchQuery = SearchQuery;
+                filtering.StartingLetter = startingLetter;
+                filtering.SearchQuery = searchQuery;
 
                 List<Customer> customers = await _customerService.GetCustomersAsync(sorting,paging,filtering);
                 if (customers.Any())
