@@ -21,7 +21,7 @@ namespace Example.Service
             _customerRepository = customerRepository;
         }
 
-        public async Task<List<Customer>> GetCustomersAsync(Sorting sorting, Paging paging, Filtering filtering)
+        public async Task<PagedList<Customer>> GetCustomersAsync(Sorting sorting, Paging paging, Filtering filtering)
         {
             return await _customerRepository.GetCustomersAsync(sorting, paging,  filtering);
         }

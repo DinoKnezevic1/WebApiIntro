@@ -33,7 +33,7 @@ namespace WebApi.Controllers
         }
 
         [HttpGet]
-        public async Task<HttpResponseMessage> GetAsync(string orderBy,string sortOrder, int itemsPerPage, int pageNumber, string searchQuery, string startingLetter)
+        public async Task<HttpResponseMessage> GetAsync(string orderBy = "LastName", string sortOrder = "ASC", int itemsPerPage = 3, int pageNumber = 1, string searchQuery = "Dino", string startingLetter = "D")
         {
             try
             {
@@ -49,11 +49,12 @@ namespace WebApi.Controllers
                 filtering.StartingLetter = startingLetter;
                 filtering.SearchQuery = searchQuery;
 
-                List<Customer> customers = await _customerService.GetCustomersAsync(sorting,paging,filtering);
-                if (customers.Any())
+                PagedList<Customer> pagedList = await _customerService.GetCustomersAsync(sorting, paging, filtering);
+                //List<Customer> customers = await _customerService.GetCustomersAsync(sorting,paging,filtering);
+                if (pagedList.Any())
                 {
-                    List<CustomerRest> customersRest = MapCustomersToRest(customers);
-                    return Request.CreateResponse(HttpStatusCode.OK, customers);
+                    List<CustomerRest> customersRest = MapCustomersToRest(pagedList);
+                    return Request.CreateResponse(HttpStatusCode.OK, pagedList);
                 }
                 return Request.CreateResponse(HttpStatusCode.NotFound);
             }
@@ -142,7 +143,7 @@ namespace WebApi.Controllers
             customerRest.LastName = customer.LastName;
             return customerRest;
         }
-        private List<CustomerRest> MapCustomersToRest(List<Customer> customers)
+        private List<CustomerRest> MapCustomersToRest(PagedList<Customer> customers)
         {
             List<CustomerRest> customerRests = new List<CustomerRest>();
 
